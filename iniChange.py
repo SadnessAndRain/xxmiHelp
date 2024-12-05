@@ -107,7 +107,7 @@ if __name__ == '__main__':
                 # 去掉符号
                 remove_text_in_line(ini_file,line_positions[current_line],text_to_add)
             #按下f10
-            keyboard.press_and_release('F11')#更底层的键盘操作
+            keyboard.press_and_release('F10')#更底层的键盘操作
             #pyautogui.press("f11")
 
         elif key.event_type=='down' and key.name == "n":
