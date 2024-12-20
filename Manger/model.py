@@ -21,6 +21,7 @@ class Game(Base):
     id = Column(Integer, autoincrement=True, primary_key=True)
     name = Column(String(50), nullable=False)
     icon = Column(String(50), nullable=True)
+    path = Column(String(50), nullable=True)
 
     def __repr__(self):
         return f"Game(id='{self.id}', name='{self.name}', icon='{self.icon}')"
