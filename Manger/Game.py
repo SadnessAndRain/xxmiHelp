@@ -26,10 +26,11 @@ class Person:
 @QmlSingleton
 class GameModel (QAbstractListModel):
     MyGame = Qt.UserRole + 1
+    Path=MyGame+1
 
     def __init__(self, data, parent=None):
         super().__init__(parent)
-        self._data = data
+        self._data = data#存的列表数据
         # self.initData()
 
 
@@ -41,14 +42,15 @@ class GameModel (QAbstractListModel):
     def roleNames(self):#提供的默认角色以外的角色,在qml使用就必须覆盖.
         games = {
             GameModel.MyGame: QByteArray(b'name'),
-            Qt.DisplayRole: QByteArray(b'icon')
+            Qt.DisplayRole: QByteArray(b'icon'),
+            GameModel.Path: QByteArray(b'path')
         }
         return games
 
-    def rowCount(self, index):#告诉视图模型有多少行
+    def rowCount(self, index):#告诉视图模型有多少行(必须实现)
         return len(self._data)
 
-    def data(self, index, role):#返回在索引引用的项目的给定角色下存储的数据。
+    def data(self, index, role):#返回在索引引用的项目的给定角色下存储的数据。(必须实现)
         d = self._data[index.row()]
         if role == Qt.DisplayRole:
             return d.icon
@@ -56,6 +58,8 @@ class GameModel (QAbstractListModel):
             return Qt.black
         if role == GameModel.MyGame:
             return d.name
+        if role == GameModel.Path:
+            return d.path
         return None
 
     @staticmethod
@@ -65,9 +69,21 @@ class GameModel (QAbstractListModel):
         print(data)
         return GameModel(data)
 
+    #添加game
+    @Slot(str,str)
+    def addGame(self,name,path):
+        game = Game(name=name,path=path)
+        session.add(game)
+        session.commit()
+        self.initData()
+        self.reload()
+
+
+    #重新加载
     @Slot()
-    def addGame(self):
-        pass
+    def reload(self):
+        self.beginResetModel()
+        self.endResetModel()
 
 
 
