@@ -10,6 +10,7 @@ from PySide6.QtGui import QGuiApplication
 from PySide6.QtQuick import QQuickView
 from PySide6.QtQml import QmlElement, QmlSingleton
 from model import session,Game
+from functools import wraps
 
 
 QML_IMPORT_NAME = "GameModel"
@@ -23,7 +24,7 @@ class Person:
 
 
 @QmlElement
-@QmlSingleton
+@QmlSingleton#将 Python 类注册为 QML 的单例，这意味着 QML 只会创建一个共享的实例，并且所有 QML 组件都可以访问这个全局单例。
 class GameModel (QAbstractListModel):
     MyGame = Qt.UserRole + 1
     Path=MyGame+1
@@ -69,21 +70,38 @@ class GameModel (QAbstractListModel):
         print(data)
         return GameModel(data)
 
+    # 重新加载
+    @staticmethod#作为静态方法，可以直接调用，不需要实例化对象
+    def reload(fn):
+        @wraps(fn)
+        def wrapper(self,*args, **kwargs):
+            self.beginResetModel()
+            try:
+                return fn(self, *args, **kwargs)
+            finally:
+                self.endResetModel()
+        return wrapper
+
     #添加game
-    @Slot(str,str)
-    def addGame(self,name,path):
-        game = Game(name=name,path=path)
+    @reload
+    @Slot(str,str,str)
+    def addGame(self,name,path,icon):
+        game = Game(name=name,path=path,icon=icon)
         session.add(game)
         session.commit()
         self.initData()
-        self.reload()
+
+    #删除game
+    @reload
+    @Slot(int)
+    def deleteGame(self,index):
+        id=self._data[index].id
+        session.query(Game).filter_by(id=id).delete()
+        session.commit()
+        self.initData()
+        print(index)
 
 
-    #重新加载
-    @Slot()
-    def reload(self):
-        self.beginResetModel()
-        self.endResetModel()
 
 
 

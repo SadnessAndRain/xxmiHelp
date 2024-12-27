@@ -19,10 +19,6 @@ RoundButton{
             color: "#bed2fe"
             width: 2
         }
-        // 设置虚线边框
-        Component.onCompleted: {
-            buttonBG.border.style = Qt.DashLine
-        }
     }
     icon.source: "./image/add.png"
     icon.width: 20
