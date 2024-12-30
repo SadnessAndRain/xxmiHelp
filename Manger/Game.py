@@ -27,7 +27,8 @@ class Person:
 @QmlSingleton#将 Python 类注册为 QML 的单例，这意味着 QML 只会创建一个共享的实例，并且所有 QML 组件都可以访问这个全局单例。
 class GameModel (QAbstractListModel):
     MyGame = Qt.UserRole + 1
-    Path=MyGame+1
+    Path=Qt.UserRole + 2
+    Icon=Qt.UserRole + 3
 
     def __init__(self, data, parent=None):
         super().__init__(parent)
@@ -40,11 +41,12 @@ class GameModel (QAbstractListModel):
         self._data = session.query(Game).all()
 
 
-    def roleNames(self):#提供的默认角色以外的角色,在qml使用就必须覆盖.
+    def roleNames(self):#提供的默认角色以外的角色,在qml使用就必须覆盖.回一个 Python 字典，其中自定义角色和角色名称作为键值对
         games = {
             GameModel.MyGame: QByteArray(b'name'),
-            Qt.DisplayRole: QByteArray(b'icon'),
-            GameModel.Path: QByteArray(b'path')
+            # Qt.DisplayRole: QByteArray(b'x'),
+            GameModel.Path: QByteArray(b'path'),
+            GameModel.Icon: QByteArray(b'icon')
         }
         return games
 
@@ -54,13 +56,15 @@ class GameModel (QAbstractListModel):
     def data(self, index, role):#返回在索引引用的项目的给定角色下存储的数据。(必须实现)
         d = self._data[index.row()]
         if role == Qt.DisplayRole:
-            return d.icon
+            return d.x
         if role == Qt.DecorationRole:
             return Qt.black
         if role == GameModel.MyGame:
             return d.name
         if role == GameModel.Path:
             return d.path
+        if role == GameModel.Icon:
+            return d.icon
         return None
 
     @staticmethod
@@ -100,6 +104,18 @@ class GameModel (QAbstractListModel):
         session.commit()
         self.initData()
         print(index)
+
+    # 修改game
+    @reload
+    @Slot(int,str,str,str)
+    def modifyGame(self,index,name,path,icon):
+        id=self._data[index].id
+        game = session.query(Game).filter_by(id=id).first()
+        game.name=name
+        game.path=path
+        game.icon=icon
+        session.commit()
+        self.initData()
 
 
 
