@@ -9,7 +9,7 @@ from PySide6.QtCore import QAbstractListModel, Qt, QUrl, QByteArray, Slot, Signa
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQuick import QQuickView
 from PySide6.QtQml import QmlElement, QmlSingleton
-from model import session,Game
+from model import session,Game,Role
 from functools import wraps
 
 
@@ -71,6 +71,7 @@ class GameModel (QAbstractListModel):
     def create(engine):
         # data = [Person('Qt', 'myrole'), Person('PySide', 'role2')]
         data =session.query(Game).all()
+        print("GameModel data")
         print(data)
         return GameModel(data)
 
@@ -90,10 +91,14 @@ class GameModel (QAbstractListModel):
     @reload
     @Slot(str,str,str)
     def addGame(self,name,path,icon):
+        path=remove_file_prefix(path)#前缀处理
+        icon=remove_file_prefix(icon)#前缀处理
         game = Game(name=name,path=path,icon=icon)
         session.add(game)
         session.commit()
         self.initData()
+        #在当前目录下的Mods文件夹中创建名为name的文件夹
+        os.makedirs(os.path.join(os.getcwd(),"Mods",name),exist_ok=True)
 
     #删除game
     @reload
@@ -104,12 +109,18 @@ class GameModel (QAbstractListModel):
         session.commit()
         self.initData()
         print(index)
+        #同时删除Role表中该game的关联数据
+        session.query(Role).filter_by(game_row=index).delete()
+        session.commit()
+
 
     # 修改game
     @reload
     @Slot(int,str,str,str)
     def modifyGame(self,index,name,path,icon):
         id=self._data[index].id
+        path=remove_file_prefix(path)#前缀处理
+        icon=remove_file_prefix(icon)#前缀处理
         game = session.query(Game).filter_by(id=id).first()
         game.name=name
         game.path=path
@@ -117,23 +128,27 @@ class GameModel (QAbstractListModel):
         session.commit()
         self.initData()
 
+#去掉file:///前缀
+def remove_file_prefix(path):
+    prefix = "file:///"
+    if path.startswith(prefix):
+        return path[len(prefix):]
+    return path
 
 
-
-
-if __name__ == '__main__':
-    app = QGuiApplication(sys.argv)
-    view = QQuickView()
-    view.setResizeMode(QQuickView.SizeRootObjectToView)
-
-    qml_file = os.fspath(Path(__file__).resolve().parent / 'Game.qml')
-    view.setSource(QUrl.fromLocalFile(qml_file))
-    if view.status() == QQuickView.Error:
-        sys.exit(-1)
-    view.show()
-
-    r = app.exec()
-    # Deleting the view before it goes out of scope is required to make sure all child QML instances
-    # are destroyed in the correct order.
-    del view
-    sys.exit(r)
+# if __name__ == '__main__':
+#     app = QGuiApplication(sys.argv)
+#     view = QQuickView()
+#     view.setResizeMode(QQuickView.SizeRootObjectToView)
+#
+#     qml_file = os.fspath(Path(__file__).resolve().parent / 'Game.qml')
+#     view.setSource(QUrl.fromLocalFile(qml_file))
+#     if view.status() == QQuickView.Error:
+#         sys.exit(-1)
+#     view.show()
+#
+#     r = app.exec()
+#     # Deleting the view before it goes out of scope is required to make sure all child QML instances
+#     # are destroyed in the correct order.
+#     del view
+#     sys.exit(r)
