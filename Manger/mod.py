@@ -76,3 +76,13 @@ class ModModel(QAbstractListModel):
     @Slot(int,int)
     def reloadData(self, game_index, role_index):
         self.initData(game_index, role_index)
+
+    #拖动添加mod
+    @reload
+    @Slot(str,str,str,str,int,int)
+    def addMod(self, file_path,name,icon,target_name,game_index,role_index):
+        file_name = os.path.basename(file_path)#文件名
+        file_path = remove_file_prefix(file_path)
+        #将file_path路径的文件移动到Mods目录下名为target_name的文件夹下
+        target_path=os.path.join(os.path.getcwd(),"Mods",target_name)
+        print("addMod", file_name)

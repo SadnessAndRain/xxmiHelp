@@ -9,7 +9,7 @@ from PySide6.QtCore import QAbstractListModel, Qt, QUrl, QByteArray, Slot, Signa
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQuick import QQuickView
 from PySide6.QtQml import QmlElement, QmlSingleton
-from model import session,Game,Role
+from model import session,Game,Role,Mod
 from functools import wraps
 
 
@@ -111,6 +111,11 @@ class GameModel (QAbstractListModel):
         print(index)
         #同时删除Role表中该game的关联数据
         session.query(Role).filter_by(game_row=index).delete()
+        #同时删除Mod表中该game的关联数据
+        session.query(Mod).filter_by(game_id=index).delete()
+        #同时删除Mods文件夹中该name的文件夹
+        name=self._data[index].name
+        os.rmdir(os.path.join(os.getcwd(),"Mods",name))
         session.commit()
 
 
