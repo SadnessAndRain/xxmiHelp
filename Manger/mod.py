@@ -1,4 +1,5 @@
 import os
+import shutil
 from dataclasses import dataclass
 from pathlib import Path
 import sys
@@ -19,7 +20,8 @@ class ModModel(QAbstractListModel):
     Name=Qt.UserRole+6
     Icon=Qt.UserRole+7
     FileName=Qt.UserRole+8
-    FilePath=Qt.UserRole+9
+    Enable=Qt.UserRole+9
+    Description=Qt.UserRole+10
     def __init__(self, data, parent=None):
         super().__init__(parent)
         self._data = data
@@ -33,7 +35,8 @@ class ModModel(QAbstractListModel):
             ModModel.Name: QByteArray(b"name"),
             ModModel.Icon: QByteArray(b"icon"),
             ModModel.FileName: QByteArray(b"fileName"),
-            ModModel.FilePath: QByteArray(b"filePath")
+            ModModel.Enable: QByteArray(b"enable"),
+            ModModel.Description: QByteArray(b"description"),
         }
         return mods
 
@@ -48,8 +51,10 @@ class ModModel(QAbstractListModel):
             return d.icon
         if role == ModModel.FileName:
             return d.file_name
-        if role == ModModel.FilePath:
-            return d.file_path
+        if role == ModModel.Enable:
+            return d.Enable
+        if role == ModModel.Description:
+            return d.description
         return None
 
     @staticmethod
@@ -59,7 +64,7 @@ class ModModel(QAbstractListModel):
         data = []
         return ModModel(data)
 
-    # 重新加载
+    # 修改修饰器,告知要开始重置模型，结束重置模型
     @staticmethod  # 作为静态方法，可以直接调用，不需要实例化对象
     def reload(fn):
         @wraps(fn)
@@ -71,6 +76,13 @@ class ModModel(QAbstractListModel):
                 self.endResetModel()
         return wrapper
 
+    #清理_data,gameList切换时使用
+    @reload
+    @Slot()
+    def clearData(self):
+        self._data=[]
+
+
     # 重新加载
     @reload
     @Slot(int,int)
@@ -79,10 +91,61 @@ class ModModel(QAbstractListModel):
 
     #拖动添加mod
     @reload
-    @Slot(str,str,str,str,int,int)
-    def addMod(self, file_path,name,icon,target_name,game_index,role_index):
-        file_name = os.path.basename(file_path)#文件名
-        file_path = remove_file_prefix(file_path)
+    @Slot(str,str,str,str,int,int,str)#传入参数依次为文件路径，mod名称，mod图标，目标文件夹名(当前所选游戏名)，当前游戏行号，当前角色行号, mod描述
+    def addMod(self, file_path, name, icon, target_name, game_index, role_index, description):
+        #打印参数
+        print("file_path:", file_path , "name:",name, "icon:",icon, "target_name:",target_name, "game_index:",game_index, "role_index:",role_index , "description:",description)
+        file_name = os.path.basename(file_path)#mod的文件名
+        #处理icon的前缀
+        icon=remove_file_prefix(icon)
+        file_path = remove_file_prefix(file_path)#去掉前缀,拿到正常路径
         #将file_path路径的文件移动到Mods目录下名为target_name的文件夹下
-        target_path=os.path.join(os.path.getcwd(),"Mods",target_name)
+        current_path=os.getcwd()#当前路径
+        #还原不启用时存储的完整路径
+        target_path=os.path.join(current_path,"Mods",target_name)
+        #将file_path路径的文件移动到Mods目录下名为target_name的文件夹下
+        if not os.path.exists(target_path):
+            print("Mods目录下不存在名为"+target_name+"的文件夹")
+            return False
+        print(file_path,target_path)
+        #移动文件
+        shutil.move(file_path,target_path)
+        #将mod信息写入数据库
+        mod=Mod(name=name, icon=icon, file_name=file_name, game_id=game_index, role_id=role_index, description=description)
+        session.add(mod)
+        session.commit()
         print("addMod", file_name)
+
+    #删除mod
+    @reload
+    @Slot(int,str,str)
+    def deleteMod(self, index,game_name,target_path):
+        #打印参数
+        print("deleteMod:", index,"target_path:",target_path)
+        mod=self._data[index]
+        #根据enable判断该文件目前在哪个个路径下
+        if mod.enable:
+            file_path=os.path.join(target_path,mod.file_name)
+        else:
+            file_path=os.path.join(os.getcwd(),"Mods",game_name,mod.file_name)
+        #删除文件
+        print(file_path)
+        # os.remove(file_path)
+        shutil.rmtree(file_path)
+        #删除数据库中的mod信息
+        session.delete(mod)
+        session.commit()
+        #_data列表中删除该mod
+        self._data.remove(mod)
+        print("deleteMod:", mod.file_name)
+
+    #修改mod信息
+    @reload
+    @Slot(int,str,str,str)
+    def modifyMod(self, index, name, icon, description):
+        id=self._data[index].id
+        mod=session.query(Mod).filter(Mod.id == id).first()
+        mod.name=name
+        mod.icon=icon
+        mod.description=description
+        session.commit()
