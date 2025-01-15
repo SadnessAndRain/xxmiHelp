@@ -52,7 +52,7 @@ class ModModel(QAbstractListModel):
         if role == ModModel.FileName:
             return d.file_name
         if role == ModModel.Enable:
-            return d.Enable
+            return d.enable
         if role == ModModel.Description:
             return d.description
         return None
@@ -149,3 +149,33 @@ class ModModel(QAbstractListModel):
         mod.icon=icon
         mod.description=description
         session.commit()
+
+    #启用或禁用mod
+    # @reload#因为只修改了enable字段,所以重不重新加载都无所谓,加载了会导致动画也要重置,太蠢了
+    @Slot(int,str,str)
+    def enableMod(self, index, game_name, target_path):
+        print("game_name:", game_name, "target_path:", target_path)
+        #修改数据库中的enable字段
+        id=self._data[index].id
+        mod=session.query(Mod).filter(Mod.id == id).first()
+        if mod.enable:
+            mod.enable=0
+            # 修改_data列表中的enable字段
+            self._data[index].enable=0
+        else:
+            mod.enable=1
+            # 修改_data列表中的enable字段
+            self._data[index].enable=1
+        print("enable:", mod.enable)
+        session.commit()
+        #判断enable的状态,如果是1,将该文件从Mods下的game_name文件夹下移动到target_path文件夹下
+        if self._data[index].enable:
+            file_path=os.path.join(os.getcwd(), "Mods", game_name, mod.file_name)
+            print("from:", file_path, "to:", target_path)
+            shutil.move(file_path, target_path)
+        #如果是0,将该文件从target_path文件夹下移动到Mods下的game_name文件夹下
+        else:
+            file_path = os.path.join(target_path, mod.file_name)
+            print("from:", file_path, "to:", os.path.join(os.getcwd(), "Mods", game_name))
+            shutil.move(file_path, os.path.join(os.getcwd(), "Mods", game_name))
+
