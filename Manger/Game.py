@@ -3,11 +3,8 @@
 
 import os
 from dataclasses import dataclass
-from pathlib import Path
-import sys
-from PySide6.QtCore import QAbstractListModel, Qt, QUrl, QByteArray, Slot, Signal
-from PySide6.QtGui import QGuiApplication
-from PySide6.QtQuick import QQuickView
+
+from PySide6.QtCore import QAbstractListModel, Qt, QByteArray, Slot
 from PySide6.QtQml import QmlElement, QmlSingleton
 from model import session,Game,Role,Mod
 from functools import wraps

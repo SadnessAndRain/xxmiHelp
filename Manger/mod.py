@@ -1,13 +1,8 @@
 import os
 import shutil
-from dataclasses import dataclass
-from pathlib import Path
-import sys
-from PySide6.QtCore import QAbstractListModel, Qt, QUrl, QByteArray, Slot, Signal
-from PySide6.QtGui import QGuiApplication
-from PySide6.QtQuick import QQuickView
+from PySide6.QtCore import QAbstractListModel, Qt, QByteArray, Slot
 from PySide6.QtQml import QmlElement, QmlSingleton
-from model import session,Game,Role,Mod
+from model import session,Mod
 from functools import wraps
 from game import remove_file_prefix
 
@@ -143,6 +138,8 @@ class ModModel(QAbstractListModel):
     @reload
     @Slot(int,str,str,str)
     def modifyMod(self, index, name, icon, description):
+        #处理下icon的前缀
+        icon=remove_file_prefix(icon)
         id=self._data[index].id
         mod=session.query(Mod).filter(Mod.id == id).first()
         mod.name=name
