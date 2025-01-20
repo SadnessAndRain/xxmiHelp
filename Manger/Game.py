@@ -20,7 +20,7 @@ class Person:
     myrole: str
 
 
-@QmlElement
+@QmlElement#将一个 Python 类注册为 QML 类型
 @QmlSingleton#将 Python 类注册为 QML 的单例，这意味着 QML 只会创建一个共享的实例，并且所有 QML 组件都可以访问这个全局单例。
 class GameModel (QAbstractListModel):
     MyGame = Qt.UserRole + 1
