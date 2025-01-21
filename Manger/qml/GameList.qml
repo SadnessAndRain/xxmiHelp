@@ -3,11 +3,12 @@ import QtQuick.Controls
 import GameModel
 import QtQuick.Layouts
 import RoleModel
+import ModModel
 
 Rectangle{
     //把ListView暴路出来
     property alias listView: listView
-    //当前所选game行索引
+    //当前所选game行的id
     property int currentGameIndex :-1
     //当前的目标路径
     property string currentTargetPath
@@ -16,6 +17,7 @@ Rectangle{
     //暴露出buttonGroup
     property alias buttonGroup: buttonGroup
     id:rect
+
     width: 170
     height: parent.height
     radius: 9
@@ -86,17 +88,19 @@ Rectangle{
                 MyMenu{
                     id:myMenu
                     onClicked: {//设置当前索引
-                        listView.currentIndex=index
+                        listView.currentIndex=id
                     }
                 }
-
                 //menu的delete逻辑部分
                 Connections{
                     target: myMenu.delelt
                     function onTriggered(){
-                        GameModel.deleteGame(listView.currentIndex)
+                        GameModel.deleteGame(id)
+                        RoleModel.clearData()
+                        ModModel.clearData()
                     }
                 }
+
                 //menu的modify逻辑部分
                 Connections{
                     target: myMenu.modify
@@ -110,8 +114,8 @@ Rectangle{
                 ButtonGroup.group: buttonGroup // 关键：将按钮绑定到互斥组
                 //当点击game列表的按钮后重新加载roleList的数据
                 onClicked: {
-                    RoleModel.reloadData(index)
-                    currentGameIndex=index
+                    RoleModel.reloadData(id)
+                    currentGameIndex=id
                     currentTargetPath=path
                     currentGameName=name
                 }

@@ -1,9 +1,11 @@
 
 from PySide6.QtCore import QAbstractListModel, Qt, QByteArray, Slot
 from PySide6.QtQml import QmlElement, QmlSingleton
-from model import session,Game,Role
+from model import session,Game,Role,Mod
 from functools import wraps
 from game import remove_file_prefix
+import shutil
+import os
 
 QML_IMPORT_NAME = "RoleModel"
 QML_IMPORT_MAJOR_VERSION = 1
@@ -11,22 +13,24 @@ QML_IMPORT_MAJOR_VERSION = 1
 @QmlElement
 @QmlSingleton
 class RoleModel (QAbstractListModel):
-    Name=Qt.UserRole+4
-    Icon=Qt.UserRole+5
+    Name=Qt.UserRole+5
+    Icon=Name+1
+    Id=Icon+1
 
     def __init__(self, data, parent=None):
         super().__init__(parent)
         self._data = data#存的列表数据
         # self.create()
 
-    # 从数据库的Role中获取对应行的数据以列表形式给_data
-    def initData(self,index):
-        self._data = session.query(Role).filter(Role.game_row==index).all()
+    # 从数据库的Role中获取对应id的数据以列表形式给_data
+    def initData(self,id):
+        self._data = session.query(Role).filter(Role.game_id==id).all()
 
     def roleNames(self):#提供的默认角色以外的角色,在qml使用就必须覆盖.回一个 Python 字典，其中自定义角色和角色名称作为键值对
         roles = {
             RoleModel.Name: QByteArray(b'name'),
-            RoleModel.Icon: QByteArray(b'icon')
+            RoleModel.Icon: QByteArray(b'icon'),
+            RoleModel.Id: QByteArray(b'id')
         }
         return roles
 
@@ -39,6 +43,8 @@ class RoleModel (QAbstractListModel):
             return d.name
         if role == RoleModel.Icon:
             return d.icon
+        if role == RoleModel.Id:
+            return d.id
         return None
 
     @staticmethod
@@ -63,24 +69,39 @@ class RoleModel (QAbstractListModel):
     #重新加载
     @reload
     @Slot(int)
-    def reloadData(self,index):
-        self.initData(index)
+    def reloadData(self,id):
+        self.initData(id)
 
     #添加角色
     @reload
     @Slot(str,str,int)
-    def addRole(self,name,icon,game_row):
+    def addRole(self,name,icon,game_id):
         icon = remove_file_prefix(icon)
-        role = Role(name=name,icon=icon,game_row=game_row)
+        role = Role(name=name,icon=icon,game_id=game_id)
         session.add(role)
         session.commit()
         self._data.append(role)
 
     #删除角色
     @reload
-    @Slot(int)
-    def deleteRole(self,index):
-        role = self._data[index]
+    @Slot(int, int, str, str)
+    def deleteRole(self,role_id, game_id, game_name, target_path):
+        #从Mod数据库中检索出所有role_id和game_id且enable=0相关的mod
+        mods = session.query(Mod).filter(Mod.game_id==game_id, Mod.role_id==role_id, Mod.enable==0).all()
+        #删除未启用的mod文件
+        for mod in mods:
+            shutil.rmtree(os.path.join(os.getcwd(), "Mods", game_name, mod.name))
+            #数据库同步删除
+            session.delete(mod)
+        #从Mod数据库中检索出所有role_id和game_id且enable=1相关的mod
+        mods = session.query(Mod).filter(Mod.game_id==game_id, Mod.role_id==role_id, Mod.enable==1).all()
+        #删除启用的mod文件
+        for mod in mods:
+            shutil.rmtree(os.path.join(target_path, mod.name))
+            #数据库同步删除
+            session.delete(mod)
+        #数据库删除角色
+        role = session.query(Role).filter(Role.id==role_id).first()
         session.delete(role)
         session.commit()
         self._data.remove(role)
@@ -88,10 +109,15 @@ class RoleModel (QAbstractListModel):
     #修改角色
     @reload
     @Slot(int,str,str)
-    def modifyRole(self,index,name,icon):
-        id = self._data[index].id
+    def modifyRole(self,id,name,icon):
         role = session.query(Role).filter(Role.id==id).first()
         role.name = name
         role.icon = remove_file_prefix(icon)
         session.commit()
-        self._data[index] = role
+        self.initData(id)
+
+    #清理data
+    @reload
+    @Slot()
+    def clearData(self):
+        self._data = []

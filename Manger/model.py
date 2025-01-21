@@ -32,7 +32,7 @@ class Role(Base):
     id = Column(Integer, autoincrement=True, primary_key=True)
     name = Column(String(255), nullable=False)#角色名称
     icon = Column(String(255), nullable=True)#图标
-    game_row = Column(Integer, nullable=True)#游戏索引
+    game_id = Column(Integer, nullable=True)#游戏id
 
     def __repr__(self):
         return f"Role(id='{self.id}', name='{self.name}', icon='{self.icon}')"
@@ -43,8 +43,8 @@ class Mod(Base):
     id = Column(Integer, autoincrement=True, primary_key=True)
     name = Column(String(255), nullable=True)#mod名称
     icon = Column(String(255), nullable=True)#图标
-    game_id = Column(Integer, nullable=False)#游戏所处的行索引
-    role_id = Column(Integer, nullable=False)#角色所处的行索引
+    game_id = Column(Integer, nullable=False)#游戏id
+    role_id = Column(Integer, nullable=False)#角色id
     file_name = Column(String(255), nullable=False)#mod文件名称
     # file_path = Column(String(50), nullable=False)#mod不启用时存放的文件路径
     #启用,0为未启用，1为启用

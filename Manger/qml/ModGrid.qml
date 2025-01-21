@@ -5,8 +5,8 @@ import ModModel
 
 GridView{
     id:gridView
-    property int currentGameIndex:-1//当前game的行索引
-    property int currentRoleIndex:-1//当前Role的行索引
+    property int currentGameIndex:-1//当前game的行的id
+    property int currentRoleIndex:-1//当前Role的行的id
     property int currentModIndex:-1//当前Mod的行索引
     property string fileUrl
     property string currentTargetPath//当前game的path
@@ -124,7 +124,7 @@ GridView{
             MyMenu{
                 id:myMenu
                 onClicked: {//设置当前索引
-                    gridView.currentIndex=index
+                    gridView.currentIndex=id
                 }
             }
             //mod的名称

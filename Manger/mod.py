@@ -12,18 +12,18 @@ QML_IMPORT_MAJOR_VERSION = 1
 @QmlElement
 @QmlSingleton
 class ModModel(QAbstractListModel):
-    Name=Qt.UserRole+6
-    Icon=Qt.UserRole+7
-    FileName=Qt.UserRole+8
-    Enable=Qt.UserRole+9
-    Description=Qt.UserRole+10
+    Name=Qt.UserRole+7
+    Icon=Name+1
+    FileName=Icon+1
+    Enable=FileName+1
+    Description=Enable+1
     def __init__(self, data, parent=None):
         super().__init__(parent)
         self._data = data
 
     # 从数据库的Mod中获取对应行的数据以列表形式给_data
-    def initData(self,game_index, role_index):
-        self._data = session.query(Mod).filter(Mod.game_id == game_index, Mod.role_id == role_index).all()
+    def initData(self,game_id, role_id):
+        self._data = session.query(Mod).filter(Mod.game_id == game_id, Mod.role_id == role_id).all()
 
     def roleNames(self):
         mods={
@@ -81,15 +81,15 @@ class ModModel(QAbstractListModel):
     # 重新加载
     @reload
     @Slot(int,int)
-    def reloadData(self, game_index, role_index):
-        self.initData(game_index, role_index)
+    def reloadData(self, game_id, role_id):
+        self.initData(game_id, role_id)
 
     #拖动添加mod
     @reload
     @Slot(str,str,str,str,int,int,str)#传入参数依次为文件路径，mod名称，mod图标，目标文件夹名(当前所选游戏名)，当前游戏行号，当前角色行号, mod描述
-    def addMod(self, file_path, name, icon, target_name, game_index, role_index, description):
+    def addMod(self, file_path, name, icon, target_name, game_id, role_id, description):
         #打印参数
-        print("file_path:", file_path , "name:",name, "icon:",icon, "target_name:",target_name, "game_index:",game_index, "role_index:",role_index , "description:",description)
+        print("file_path:", file_path , "name:",name, "icon:",icon, "target_name:",target_name, "game_index:",game_id, "role_index:",role_id , "description:",description)
         file_name = os.path.basename(file_path)#mod的文件名
         #处理icon的前缀
         icon=remove_file_prefix(icon)
@@ -106,7 +106,7 @@ class ModModel(QAbstractListModel):
         #移动文件
         shutil.move(file_path,target_path)
         #将mod信息写入数据库
-        mod=Mod(name=name, icon=icon, file_name=file_name, game_id=game_index, role_id=role_index, description=description)
+        mod=Mod(name=name, icon=icon, file_name=file_name, game_id=game_id, role_id=role_id, description=description)
         session.add(mod)
         session.commit()
         print("addMod", file_name)

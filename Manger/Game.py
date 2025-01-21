@@ -8,6 +8,7 @@ from PySide6.QtCore import QAbstractListModel, Qt, QByteArray, Slot
 from PySide6.QtQml import QmlElement, QmlSingleton
 from model import session,Game,Role,Mod
 from functools import wraps
+import shutil
 
 
 QML_IMPORT_NAME = "GameModel"
@@ -26,6 +27,7 @@ class GameModel (QAbstractListModel):
     MyGame = Qt.UserRole + 1
     Path=Qt.UserRole + 2
     Icon=Qt.UserRole + 3
+    Id=Qt.UserRole + 4
 
     def __init__(self, data, parent=None):
         super().__init__(parent)
@@ -43,7 +45,8 @@ class GameModel (QAbstractListModel):
             GameModel.MyGame: QByteArray(b'name'),
             # Qt.DisplayRole: QByteArray(b'x'),
             GameModel.Path: QByteArray(b'path'),
-            GameModel.Icon: QByteArray(b'icon')
+            GameModel.Icon: QByteArray(b'icon'),
+            GameModel.Id: QByteArray(b'id')
         }
         return games
 
@@ -62,6 +65,8 @@ class GameModel (QAbstractListModel):
             return d.path
         if role == GameModel.Icon:
             return d.icon
+        if role == GameModel.Id:
+            return d.id
         return None
 
     @staticmethod
@@ -100,27 +105,35 @@ class GameModel (QAbstractListModel):
     #删除game
     @reload
     @Slot(int)
-    def deleteGame(self,index):
-        id=self._data[index].id
+    def deleteGame(self,id):
+        #同时删除Role表中该game的关联数据
+        session.query(Role).filter_by(game_id=id).delete()
+        #获取该game的path
+        path=session.query(Game).filter_by(id=id).first().path
+        #获取mod表中enabled=1且game_id=id的所有数据
+        mods=session.query(Mod).filter_by(enable=1,game_id=id).all()
+        #遍历mods,将path下名为file_name的文件夹都删除
+        for mod in mods:
+            mod_path=os.path.join(path,mod.file_name)
+            if os.path.exists(mod_path):
+                shutil.rmtree(mod_path)
+        #同时删除Mod表中该game的关联数据
+        session.query(Mod).filter_by(game_id=id).delete()
+        #同时删除Mods文件夹中该name的文件夹
+        name=session.query(Game).filter_by(id=id).first().name
+        shutil.rmtree(os.path.join(os.getcwd(),"Mods",name))
+        session.commit()
+        #删除数据库中的game数据
         session.query(Game).filter_by(id=id).delete()
         session.commit()
         self.initData()
-        print(index)
-        #同时删除Role表中该game的关联数据
-        session.query(Role).filter_by(game_row=index).delete()
-        #同时删除Mod表中该game的关联数据
-        session.query(Mod).filter_by(game_id=index).delete()
-        #同时删除Mods文件夹中该name的文件夹
-        name=self._data[index].name
-        os.rmdir(os.path.join(os.getcwd(),"Mods",name))
-        session.commit()
+        print(id)
 
 
     # 修改game
     @reload
     @Slot(int,str,str,str)
-    def modifyGame(self,index,name,path,icon):
-        id=self._data[index].id
+    def modifyGame(self,id,name,path,icon):
         path=remove_file_prefix(path)#前缀处理
         icon=remove_file_prefix(icon)#前缀处理
         game = session.query(Game).filter_by(id=id).first()

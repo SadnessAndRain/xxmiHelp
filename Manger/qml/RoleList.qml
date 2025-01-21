@@ -5,12 +5,14 @@ import ModModel
 
 
 ListView{
-    //当前所选role行索引
+    //当前所选role行的id
     property int currentRoleIndex :-1
     //当前所选game行索引
     property int currentGameIndex :-1
     //将buttonGroup暴露出来
     property alias roleButtonGroup:roleButtonGroup
+    property string currentTargetPath//当前game的path
+    property string currentGameName//当前game的name
     id:roleListView
     anchors.fill: parent
     model: RoleModel
@@ -36,14 +38,14 @@ ListView{
             MyMenu{
                 id:roleMenu
                 onClicked: {//设置当前索引
-                    roleListView.currentIndex=index
+                    roleListView.currentIndex=id
                 }
             }
             //menu的delete逻辑部分
             Connections{
                 target: roleMenu.delelt
                 function onTriggered() {
-                    RoleModel.deleteRole(roleListView.currentIndex)
+                    RoleModel.deleteRole(id, roleListView.currentGameIndex, roleListView.currentGameName, roleListView.currentTargetPath)
                 }
             }
             //menu的modify逻辑部分
@@ -57,8 +59,8 @@ ListView{
             }
             //当点击role列表的按钮加载modList
             onClicked: {
-                currentRoleIndex=index
-                ModModel.reloadData(currentGameIndex,index)
+                currentRoleIndex=id
+                ModModel.reloadData(roleListView.currentGameIndex,id)
             }
         }
     }

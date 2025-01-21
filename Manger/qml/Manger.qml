@@ -229,6 +229,7 @@ Window {
                 anchors.bottomMargin: 10
                 onCurrentGameIndexChanged: {
                     roleAddBtn.visible=true
+
                     // roleList.currentGameIndex=currentGameIndex//让rolelist的currentGameIndex等于gameList的当前所处index
                     // modGrid.currentTargetPath=gameList.currentTargetPath//告知modGrid当前的目标路径
                     // modGrid.currentGameName=gameList.currentGameName//告知modGrid当前的gameName(史山变多了)
@@ -241,6 +242,8 @@ Window {
                         modGrid.currentGameName=gameList.currentGameName//告知modGrid当前的gameName(史山变多了)
                         modGrid.currentGameIndex=gameList.currentGameIndex//告知modGrid当前的gameIndex
                         roleList.currentGameIndex=gameList.currentGameIndex//让rolelist的currentGameIndex等于gameList的当前所处index
+                        roleList.currentTargetPath=gameList.currentTargetPath//告知roleList当前的目标路径
+                        roleList.currentGameName=gameList.currentGameName//告知roleList当前的gameName(史山变多了)
                         ModModel.clearData()//切换game时清空modGrid
                         modBg.visible=false//顺便直接把modGrid这个视图部分直接隐藏
                     }
