@@ -5,6 +5,7 @@ from PySide6.QtQml import QmlElement, QmlSingleton
 from model import session,Mod
 from functools import wraps
 from game import remove_file_prefix
+import rarfile
 
 QML_IMPORT_NAME = "ModModel"
 QML_IMPORT_MAJOR_VERSION = 1
@@ -93,10 +94,13 @@ class ModModel(QAbstractListModel):
         file_name = os.path.basename(file_path)#mod的文件名
         #处理icon的前缀
         icon=remove_file_prefix(icon)
+        #判断icon是否为正常路径,不是则为空字符串
+        if not os.path.exists(icon):
+            icon=""
         file_path = remove_file_prefix(file_path)#去掉前缀,拿到正常路径
         #将file_path路径的文件移动到Mods目录下名为target_name的文件夹下
         current_path=os.getcwd()#当前路径
-        #还原不启用时存储的完整路径
+        #不启用时存储的完整路径
         target_path=os.path.join(current_path,"Mods",target_name)
         #将file_path路径的文件移动到Mods目录下名为target_name的文件夹下
         if not os.path.exists(target_path):
@@ -105,6 +109,19 @@ class ModModel(QAbstractListModel):
         print(file_path,target_path)
         #移动文件
         shutil.move(file_path,target_path)
+        #判断该文件名后缀是否为.zip、.rar、.7z,如果是,则解压到target_path文件夹下
+        if file_name.endswith(".zip") or file_name.endswith(".7z"):
+            shutil.unpack_archive(os.path.join(target_path,file_name), target_path)
+            #删除压缩包
+            os.remove(os.path.join(target_path,file_name))
+        #如果是.rar文件,则使用rarfile命令解压到target_path文件夹下
+        elif file_name.endswith(".rar"):
+            with rarfile.RarFile(os.path.join(target_path,file_name)) as rf:
+                rf.extractall(path=target_path)
+            #删除压缩包
+            os.remove(os.path.join(target_path, file_name))
+        #去掉file_name的后缀
+        file_name=os.path.splitext(file_name)[0]
         #将mod信息写入数据库
         mod=Mod(name=name, icon=icon, file_name=file_name, game_id=game_id, role_id=role_id, description=description)
         session.add(mod)
@@ -140,6 +157,9 @@ class ModModel(QAbstractListModel):
     def modifyMod(self, index, name, icon, description):
         #处理下icon的前缀
         icon=remove_file_prefix(icon)
+        #判断icon是否为正常路径,不是则为空字符串
+        if not os.path.exists(icon):
+            icon=""
         id=self._data[index].id
         mod=session.query(Mod).filter(Mod.id == id).first()
         mod.name=name
@@ -176,3 +196,12 @@ class ModModel(QAbstractListModel):
             print("from:", file_path, "to:", os.path.join(os.getcwd(), "Mods", game_name))
             shutil.move(file_path, os.path.join(os.getcwd(), "Mods", game_name))
 
+    #在资源管理器中打开mod所在文件夹
+    @Slot(str, str, str, int)
+    def openModFolder(self, game_name, file_name, target_path, enable):
+        #如果是enable==1,则打开target_path目录下的game_name文件夹
+        if enable:
+            os.startfile(os.path.join(target_path, file_name))
+        #如果是enable==0,则打开Mods目录下的game_name目录的file_name文件
+        else:
+            os.startfile(os.path.join(os.getcwd(), "Mods", game_name, file_name))

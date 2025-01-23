@@ -14,8 +14,8 @@ RoundButton{
         anchors.fill: parent
         color:myBtn.hovered? "#e0e9ff":"white"
         border{
-            color: "#1456f0"
-            width: 1
+            color: "#bed2fe"
+            width: 2
         }
         //颜色过渡
         Behavior on color { // 添加颜色过渡动画

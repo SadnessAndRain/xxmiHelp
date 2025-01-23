@@ -4,6 +4,7 @@ import Qt5Compat.GraphicalEffects
 import GameModel
 import RoleModel
 import ModModel
+import QtQuick.Controls.Basic//用来设置主题,方便控件自定义,不然会报错
 // import ModModel
 
 Window {
@@ -161,6 +162,7 @@ Window {
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.margins: 5
                 background: Rectangle {
+                    radius: 7
                     color: exitBtn.hovered ? "red":"transparent"
                 }
                 onClicked: Qt.quit()
@@ -174,7 +176,8 @@ Window {
                 anchors.right: exitBtn.left
                 anchors.verticalCenter: parent.verticalCenter
                 background: Rectangle {
-                    color: "transparent"
+                    radius: 7
+                    color: miniBtn.hovered? "white":"transparent"
                 }
                 onClicked: root.showMinimized()
             }
@@ -188,7 +191,8 @@ Window {
                 anchors.right: miniBtn.left
                 anchors.verticalCenter: parent.verticalCenter
                 background: Rectangle {
-                    color: "transparent"
+                    radius: 7
+                    color: maxBtn.hovered? "white":"transparent"
                 }
                 onClicked: {
                     if (root.visibility === Window.Maximized) {
@@ -200,7 +204,7 @@ Window {
             }
         }
         //game列
-        Column{
+        Item{
             id:gameListColumn
             // anchors.fill: parent
             anchors.top: parent.top

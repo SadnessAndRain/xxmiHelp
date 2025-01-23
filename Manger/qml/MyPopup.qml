@@ -37,23 +37,17 @@ Popup{
         anchors.bottomMargin: 3
         color: "white"
         radius: dlbg.radius
-        Column{
+        Item{
             id:column
             anchors.fill: parent
-            topPadding: 7
-            spacing: 10
             Row{//ann
                 anchors.bottom: parent.bottom
-                anchors.bottomMargin: 30
-                anchors.left: parent.left
-                anchors.right: parent.right
-                padding: 30
+                anchors.bottomMargin: 10
+                leftPadding: 40
+                spacing: 180
                 MyButton{//提交按钮
                     id:confirmation
                     text: qsTr("Confirmation")
-                    anchors.left: parent.left
-                    anchors.leftMargin: 40
-                    anchors.verticalCenter:parent.verticalCenter
                     onClicked: {
                         // GameModel.addGame(cdName.text, cdPath.pathStr, cdIcon.pathStr)
                         // //清除输入框里面的内容
@@ -66,9 +60,6 @@ Popup{
                 MyButton{//取消按钮
                     id:cancel
                     text: qsTr("Cancel")
-                    anchors.right: parent.right
-                    anchors.rightMargin: 40
-                    anchors.verticalCenter:parent.verticalCenter
                     onClicked: {
                         root.close()
                     }

@@ -2,17 +2,19 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Dialogs
 import QtCore
+import QtQuick.Controls.Basic//用来设置主题,方便控件自定义,不然会报错
 Row{
     //对外暴露的属性
     property alias pathStr: inputPathText.text//文本
     property alias phText: inputPathText.placeholderText//占位文本
-    // spacing: 20
+    spacing: 20
     TextField{
         id:inputPathText
-        height: parent.height
-        anchors.left: parent.left
-        anchors.right: openFolderBtn.left
-        anchors.rightMargin: 20
+        height: 30
+        width: 300
+        // anchors.left: parent.left
+        // anchors.right: openFolderBtn.left
+        // anchors.rightMargin: 20
         font.pixelSize: 16
         text:folderDialog.selectedFolder===undefined ? "":folderDialog.selectedFolder
         placeholderText: "Path"
@@ -30,8 +32,8 @@ Row{
     MyButton{
         id:openFolderBtn
         width: 100
-        anchors.right: parent.right
-        height: parent.height
+        // anchors.right: parent.right
+        height: 30
         text: qsTr("Open Folder")
         onClicked: {
             folderDialog.open()

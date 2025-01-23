@@ -43,22 +43,23 @@ Popup{
         color: "white"
         radius: dlbg.radius
         Column{
-            anchors.fill: parent
             topPadding: 7
             spacing: 10
+            anchors.horizontalCenter: parent.horizontalCenter
+            clip: true
             Label{
                 id:nameLabel
                 text: qsTr("Game Name:")
                 height: 10
                 font.pixelSize: 16
-                anchors.left: parent.left
-                anchors.leftMargin: 10
+                // anchors.left: parent.left
+                // anchors.leftMargin: 10
             }
             CustInputText{//输入name框
                 id:cdName
                 width: content.width-30
                 height: 30
-                anchors.horizontalCenter: parent.horizontalCenter
+                // anchors.horizontalCenter: parent.horizontalCenter
                 placeholderText: "Game Name"
             }
             Label{
@@ -66,42 +67,40 @@ Popup{
                 text: qsTr("Path:")
                 height: 10
                 font.pixelSize: 16
-                anchors.left: parent.left
-                anchors.leftMargin: 10
+                // anchors.left: parent.left
+                // anchors.leftMargin: 10
             }
             CustInputFilePath{//选择或输入path的框
                 id:cdPath
                 width: content.width-30
                 height: 30
-                anchors.horizontalCenter: parent.horizontalCenter
+                // anchors.horizontalCenter: parent.horizontalCenter
             }
             Label{
                 id:iconLabel
                 text: qsTr("Icon Path:")
                 height: 10
                 font.pixelSize: 16
-                anchors.left: parent.left
-                anchors.leftMargin: 10
+                // anchors.left: parent.left
+                // anchors.leftMargin: 10
             }
             CustInputIconPath{//选择或输入icon path的框
                 id:cdIcon
                 width: content.width-30
                 height: 30
-                anchors.horizontalCenter: parent.horizontalCenter
+                // anchors.horizontalCenter: parent.horizontalCenter
                 phText: "Icon Path"
             }
-            Row{
-                anchors.bottom: parent.bottom
-                anchors.bottomMargin: 60
-                anchors.left: parent.left
-                anchors.right: parent.right
-                padding: 30
+            Item{
+                height: 60
+                width: parent.width
                 MyButton{//提交按钮
                     id:confirmation
                     text: qsTr("Confirmation")
                     anchors.left: parent.left
                     anchors.leftMargin: 40
-                    anchors.verticalCenter:parent.verticalCenter
+                    anchors.top: parent.top
+                    anchors.topMargin: 30
                     onClicked: {
                         // GameModel.addGame(cdName.text, cdPath.pathStr, cdIcon.pathStr)
                         // //清除输入框里面的内容
@@ -116,7 +115,8 @@ Popup{
                     text: qsTr("Cancel")
                     anchors.right: parent.right
                     anchors.rightMargin: 40
-                    anchors.verticalCenter:parent.verticalCenter
+                    anchors.top: parent.top
+                    anchors.topMargin: 30
                     onClicked: {
                         root.close()
                     }

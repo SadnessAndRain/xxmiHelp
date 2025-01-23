@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import ModModel
 // import QtQuick.Controls.Material
+import QtQuick.Controls.Basic//用来设置主题,方便控件自定义,不然会报错
 
 GridView{
     id:gridView
@@ -45,7 +46,6 @@ GridView{
 
     //拖入mod来添加部分
     header: AddButton{
-        anchors.horizontalCenter: parent.horizontalCenter
         width: parent.width
         height: cellHeight/2
         //拖动区域
@@ -111,7 +111,7 @@ GridView{
             Image {//图片
                 id: image
                 fillMode: Image.PreserveAspectFit
-                source: "file:///"+model.icon
+                source: model.icon? "file:///"+model.icon : "./image/add.png"
                 height: parent.height-90
                 anchors.top: parent.top
                 anchors.left: parent.left
@@ -124,7 +124,7 @@ GridView{
             MyMenu{
                 id:myMenu
                 onClicked: {//设置当前索引
-                    gridView.currentIndex=id
+                    gridView.currentIndex=index
                 }
             }
             //mod的名称
@@ -139,6 +139,20 @@ GridView{
                 font.pixelSize: 16
                 color: "black"
                 horizontalAlignment:Text.AlignHCenter
+            }
+            //打开mod文件夹的按钮
+            MyButton{
+                id:openModFile
+                width: 60
+                height: 24
+                anchors.left: modBtn.left
+                anchors.leftMargin: 20
+                anchors.top: modName.bottom
+                anchors.topMargin: 5
+                text: qsTr("location")
+                onClicked: {
+                    ModModel.openModFolder(gridView.currentGameName, fileName, gridView.currentTargetPath, enable)
+                }
             }
 
             //启用的switch按钮
@@ -212,10 +226,6 @@ GridView{
                     modifyModDialog.modIconText=model.icon
                     modifyModDialog.modDescriptionText=model.description
                 }
-            }
-            //设置图片的资源
-            Component.onCompleted: {
-                // modBtn.imageSource="file:///"+model.icon
             }
         }
     }

@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Controls.Basic//用来设置主题,方便控件自定义,不然会报错
 
 TextField{
     id:inputText
