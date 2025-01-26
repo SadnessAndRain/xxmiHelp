@@ -70,7 +70,7 @@ class GameModel (QAbstractListModel):
         return None
 
     @staticmethod
-    def create(engine):
+    def create(engine):#自动调用，创建单例对象，返回给qml
         # data = [Person('Qt', 'myrole'), Person('PySide', 'role2')]
         data =session.query(Game).all()
         print("GameModel data")
@@ -91,16 +91,24 @@ class GameModel (QAbstractListModel):
 
     #添加game
     @reload
-    @Slot(str,str,str)
+    @Slot(str,str,str, result=bool)
     def addGame(self,name,path,icon):
+        #数据库中查找是否有相同的name
+        if session.query(Game).filter_by(name=name).first() is not None:
+            return False
         path=remove_file_prefix(path)#前缀处理
         icon=remove_file_prefix(icon)#前缀处理
+        # 在当前目录下的Mods文件夹中创建名为name的文件夹
+        os.makedirs(os.path.join(os.getcwd(), "Mods", name), exist_ok=True)
+        # 在当前name文件夹下创建images文件夹
+        os.makedirs(os.path.join(os.getcwd(), "Mods", name, "images"), exist_ok=True)
+        # 在当前name文件夹下创建sounds文件夹
         game = Game(name=name,path=path,icon=icon)
         session.add(game)
         session.commit()
         self.initData()
-        #在当前目录下的Mods文件夹中创建名为name的文件夹
-        os.makedirs(os.path.join(os.getcwd(),"Mods",name),exist_ok=True)
+        return True
+
 
     #删除game
     @reload
@@ -137,6 +145,8 @@ class GameModel (QAbstractListModel):
         path=remove_file_prefix(path)#前缀处理
         icon=remove_file_prefix(icon)#前缀处理
         game = session.query(Game).filter_by(id=id).first()
+        #使用shutil修改Mods下的文件夹名称
+        os.rename(os.path.join(os.getcwd(),"Mods",game.name),os.path.join(os.getcwd(),"Mods",name))
         game.name=name
         game.path=path
         game.icon=icon

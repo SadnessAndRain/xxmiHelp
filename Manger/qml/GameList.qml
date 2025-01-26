@@ -17,13 +17,14 @@ Rectangle{
     //暴露出buttonGroup
     property alias buttonGroup: buttonGroup
     id:rect
-
     width: 170
     height: parent.height
     radius: 9
     clip:true//裁剪
     ListView {//列表视图
         id:listView
+        clip:true
+        property int currentId: -1
         anchors.fill: parent
         // spacing: 10
         // header:Rectangle{
@@ -46,7 +47,7 @@ Rectangle{
             Connections{
                 target: customDialog.confirmation
                 function onClicked(){
-                    GameModel.modifyGame(listView.currentIndex,customDialog.cdName, customDialog.cdPath, customDialog.cdIcon)
+                    GameModel.modifyGame(listView.currentId,customDialog.cdName, customDialog.cdPath, customDialog.cdIcon)
                     //清除输入框里面的内容
                     customDialog.cdName=""
                     customDialog.cdPath=""
@@ -55,41 +56,42 @@ Rectangle{
                 }
             }
         }
-
-        delegate: Component{//委托组件
-            RoundButton {
-                id:roundBtn
-                width: rect.width
-                height: 40
-                text: name
-                radius: 9
-                autoExclusive: true//启用排他
-                checkable: true//可选中
-                background: Rectangle {
-                    id:bg
-                    anchors.top: parent.top
-                    anchors.topMargin: 5
-                    anchors.bottom: parent.bottom
-                    anchors.bottomMargin: 5
-                    width: 150
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    color:  roundBtn.checked ? "#F8FAFD" : (roundBtn.hovered ? "#F5F8FD" : rect.color)// 选中时变成绿色，未选中时变成灰色
-                    radius: parent.radius
-                    border.color: "transparent" // 去掉边框
-                    //颜色过渡
-                    Behavior on color { // 添加颜色过渡动画
-                        ColorAnimation {
-                            duration: 250 // 动画持续时间（毫秒）
-                            easing.type: Easing.InOutQuad // 动画缓动类型
-                        }
-                    }
-                }
-                //弹出的菜单栏
-                MyMenu{
-                    id:myMenu
-                    onClicked: {//设置当前索引
-                        listView.currentIndex=id
-                    }
+        //高亮部分
+        highlight:Rectangle{
+            id:hlRect
+            color: "#F8FAFD"
+            width: 10
+            height: 10
+            radius: 9
+        }
+        highlightMoveDuration:150
+        //委托组件
+        delegate: RoundButton {
+            id:roundBtn
+            width: rect.width
+            height: 40
+            text: name
+            radius: 9
+            autoExclusive: true//启用排他
+            checkable: true//可选中
+            background: Rectangle {
+                id:bg
+                anchors.top: parent.top
+                anchors.topMargin: 5
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: 5
+                width: 150
+                anchors.horizontalCenter: parent.horizontalCenter
+                color:  roundBtn.hovered ? "#F5F8FD" : "transparent"// 选中时变成绿色，未选中时变成灰色
+                radius: parent.radius
+                border.color: "transparent" // 去掉边框
+            }
+            //弹出的菜单栏
+            MyMenu{
+                id:myMenu
+                onClicked: {//设置当前id
+                    // listView.currentIndex=id
+                    listView.currentId=id
                 }
                 //menu的delete逻辑部分
                 Connections{
@@ -100,7 +102,6 @@ Rectangle{
                         ModModel.clearData()
                     }
                 }
-
                 //menu的modify逻辑部分
                 Connections{
                     target: myMenu.modify
@@ -111,15 +112,20 @@ Rectangle{
                         customDialog.cdIcon=model.icon
                     }
                 }
-                ButtonGroup.group: buttonGroup // 关键：将按钮绑定到互斥组
-                //当点击game列表的按钮后重新加载roleList的数据
-                onClicked: {
-                    RoleModel.reloadData(id)
-                    currentGameIndex=id
-                    currentTargetPath=path
-                    currentGameName=name
-                }
             }
+
+            ButtonGroup.group: buttonGroup // 关键：将按钮绑定到互斥组
+            //当点击game列表的按钮后重新加载roleList的数据
+            onClicked: {
+                RoleModel.reloadData(id)
+                currentGameIndex=id
+                currentTargetPath=path
+                currentGameName=name
+                listView.currentIndex=index
+            }
+        }
+        Component.onCompleted: {
+            listView.currentIndex=-1
         }
     }
 }

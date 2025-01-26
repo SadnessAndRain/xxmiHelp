@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import ModModel
-// import QtQuick.Controls.Material
 import QtQuick.Controls.Basic//用来设置主题,方便控件自定义,不然会报错
 
 GridView{
@@ -9,7 +8,8 @@ GridView{
     property int currentGameIndex:-1//当前game的行的id
     property int currentRoleIndex:-1//当前Role的行的id
     property int currentModIndex:-1//当前Mod的行索引
-    property string fileUrl
+    property string fileUrl//文件url
+    property string imageUrl//图片url
     property string currentTargetPath//当前game的path
     property string currentGameName//当前game的name
     anchors.fill: parent
@@ -22,13 +22,31 @@ GridView{
         id:addModDialog
         // cancel.visible: false//隐藏关闭按钮
         // closePolicy: Popup.NoAutoClose//设置取消自动关闭
+        property bool warning: true//false为出错,true为正常
+        //警告弹窗
+        WarningPopup{
+            id:warningPopup
+            title: qsTr("Warning")
+            text: qsTr("Same file already exists, please check if the same mod exists.")
+            Connections{
+                target:warningPopup.confirmation
+                function onClicked(){
+                    warningPopup.close()
+                }
+            }
+        }
+
         Connections{
             target: addModDialog.confirmation
             function onClicked(){
-                ModModel.addMod(fileUrl, addModDialog.modNameText, addModDialog.modIconText, currentGameName, currentGameIndex, currentRoleIndex, addModDialog.modDescriptionText)
+                addModDialog.warning=ModModel.addMod(fileUrl, addModDialog.modNameText, addModDialog.modIconText, currentGameName, currentGameIndex, currentRoleIndex, addModDialog.modDescriptionText)
                 addModDialog.close()
                 //刷新数据
                 ModModel.reloadData(currentGameIndex,currentRoleIndex)
+                if(addModDialog.warning===false)
+                {
+                    warningPopup.open()
+                }
             }
         }
     }
@@ -112,13 +130,34 @@ GridView{
                 id: image
                 fillMode: Image.PreserveAspectFit
                 source: model.icon? "file:///"+model.icon : "./image/add.png"
-                height: parent.height-90
+                height: parent.height-85
                 anchors.top: parent.top
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.topMargin: 4+10
                 anchors.leftMargin: 4+10
                 anchors.rightMargin: 4+10
+                //拖动放下区域
+                DropArea{
+                    id:dropArea
+                    anchors.fill: parent
+                    enabled: true
+                    onEntered: function(drag){
+                        modBtn.background.color="#e4e6e7"
+                        if (drag.urls.length !== 1) { // 过滤事件，只能拖拽一个项目
+                            drag.accepted = false
+                            return false;
+                        }
+                    }
+                    onExited: modBtn.background.color="#f5f6f7"
+                    onDropped: function(drop){//当拖动放下时
+                        imageUrl=drop.text
+                        //拖入松开后改变颜色
+                        modBtn.background.color="#f5f6f7"
+                        //添加图片
+                        ModModel.addModIcon(currentGameName, id, imageUrl)
+                    }
+                }
             }
             //右键弹出的菜单栏
             MyMenu{
@@ -134,7 +173,7 @@ GridView{
                 width: parent.width-30
                 height: 25
                 anchors.top: image.bottom
-                // anchors.topMargin: 10
+                anchors.topMargin: 3
                 anchors.horizontalCenter: parent.horizontalCenter
                 font.pixelSize: 16
                 color: "black"
@@ -148,7 +187,7 @@ GridView{
                 anchors.left: modBtn.left
                 anchors.leftMargin: 20
                 anchors.top: modName.bottom
-                anchors.topMargin: 5
+                anchors.topMargin: 3
                 text: qsTr("location")
                 onClicked: {
                     ModModel.openModFolder(gridView.currentGameName, fileName, gridView.currentTargetPath, enable)
@@ -162,7 +201,7 @@ GridView{
                 width: 55
                 height: 24
                 anchors.top: modName.bottom
-                anchors.topMargin: 5
+                anchors.topMargin: 3
                 anchors.right: modBtn.right
                 anchors.rightMargin: 20
                 //设置checked状态

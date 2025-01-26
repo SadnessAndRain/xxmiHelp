@@ -219,6 +219,34 @@ Window {
                 anchors.top: parent.top
                 anchors.topMargin: 6
                 radius: main.radius
+                //添加game列表的弹出窗口
+                CustomDialog{
+                    id:ctDl
+                    property bool warning: true
+                    //添加game时重名的警告窗口
+                    WarningPopup{
+                        id:warningPopup
+                        text:qsTr("Same game already exist")
+                        title: qsTr("Warning")
+                        Connections{
+                            target: warningPopup.confirmation
+                            function onClicked(){
+                                warningPopup.close()
+                            }
+                        }
+                    }
+                    //确认按钮的操作
+                    Connections{
+                        target: ctDl.confirmation
+                        function onClicked(){
+                            ctDl.warning= GameModel.addGame(ctDl.cdName, ctDl.cdPath, ctDl.cdIcon)
+                            ctDl.close()
+                            if (ctDl.warning===false){
+                                warningPopup.open()
+                            }
+                        }
+                    }
+                }
                 onClicked: {
                     ctDl.open()
                 }
@@ -250,6 +278,7 @@ Window {
                         roleList.currentGameName=gameList.currentGameName//告知roleList当前的gameName(史山变多了)
                         ModModel.clearData()//切换game时清空modGrid
                         modBg.visible=false//顺便直接把modGrid这个视图部分直接隐藏
+                        roleList.currentIndex=-1
                     }
                 }
             }
@@ -273,6 +302,18 @@ Window {
                 anchors.left: parent.left
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
+                //添加role列表的弹出窗口
+                RoleDialog{
+                    id:roleDialog
+                    //确认按钮的操作
+                    Connections{
+                        target: roleDialog.confirmation
+                        function onClicked(){
+                            RoleModel.addRole(roleDialog.roleNameText,roleDialog.roleIconText,gameList.currentGameIndex)
+                            roleDialog.close()
+                        }
+                    }
+                }
                 AddButton{//role添加的按钮
                     id:roleAddBtn
                     z:1
@@ -287,14 +328,17 @@ Window {
                 //RoleList的背景
                 Rectangle{
                     id:roleListBg
-                    anchors.fill: parent
-                    anchors.top: parent.top
+                    width: 250
+                    anchors.bottom: parent.bottom
+                    anchors.top: roleAddBtn.bottom
+                    anchors.horizontalCenter: parent.horizontalCenter
                     color: parent.color
                     clip: true
                     radius: parent.radius
                     RoleList{
                         id:roleList
-                        anchors.topMargin: roleAddBtn.height
+                        clip: true
+                        anchors.fill: parent
                         //监听game的currentGameIndex
                         // Connections{
                         //     target: gameList
@@ -332,30 +376,6 @@ Window {
                 ModGrid{
                     id:modGrid
                 }
-            }
-        }
-    }
-    //添加game列表的弹出窗口
-    CustomDialog{
-        id:ctDl
-        //确认按钮的操作
-        Connections{
-            target: ctDl.confirmation
-            function onClicked(){
-                GameModel.addGame(ctDl.cdName, ctDl.cdPath, ctDl.cdIcon)
-                ctDl.close()
-            }
-        }
-    }
-    //添加role列表的弹出窗口
-    RoleDialog{
-        id:roleDialog
-        //确认按钮的操作
-        Connections{
-            target: roleDialog.confirmation
-            function onClicked(){
-                RoleModel.addRole(roleDialog.roleNameText,roleDialog.roleIconText,gameList.currentGameIndex)
-                roleDialog.close()
             }
         }
     }

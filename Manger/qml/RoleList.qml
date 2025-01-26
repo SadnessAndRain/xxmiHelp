@@ -7,14 +7,16 @@ import ModModel
 ListView{
     //当前所选role行的id
     property int currentRoleIndex :-1
-    //当前所选game行索引
+    //当前所选game行的id
     property int currentGameIndex :-1
     //将buttonGroup暴露出来
     property alias roleButtonGroup:roleButtonGroup
     property string currentTargetPath//当前game的path
     property string currentGameName//当前game的name
+    //当前所选id
+    property int currentId: -1
     id:roleListView
-    anchors.fill: parent
+    // anchors.fill: parent
     model: RoleModel
     ButtonGroup { id: roleButtonGroup }
     //修改窗口
@@ -23,11 +25,17 @@ ListView{
         Connections{
             target: roleModifyDialog.confirmation
             function onClicked(){
-                RoleModel.modifyRole(roleListView.currentIndex,roleModifyDialog.roleNameText, roleModifyDialog.roleIconText)
+                RoleModel.modifyRole(roleListView.currentId, roleModifyDialog.roleNameText, roleModifyDialog.roleIconText, roleListView.currentGameIndex)
                 roleModifyDialog.close()
             }
         }
     }
+    //高亮
+    highlight:Rectangle{
+        color: "#d3def6"
+        radius: 9
+    }
+    highlightMoveDuration:150
     //委托部分
     delegate: Component{
         RoleListBtn{
@@ -38,7 +46,7 @@ ListView{
             MyMenu{
                 id:roleMenu
                 onClicked: {//设置当前索引
-                    roleListView.currentIndex=id
+                    roleListView.currentId=id
                 }
             }
             //menu的delete逻辑部分
@@ -61,8 +69,12 @@ ListView{
             onClicked: {
                 currentRoleIndex=id
                 ModModel.reloadData(roleListView.currentGameIndex,id)
+                roleListView.currentIndex=index
             }
         }
+    }
+    Component.onCompleted: {
+        roleListView.currentIndex=-1
     }
 }
 

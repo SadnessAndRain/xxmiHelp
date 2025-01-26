@@ -6,6 +6,7 @@ Popup{
     property alias confirmation: confirmation//把确认按钮给暴露出来
     property alias cancel: cancel//把取消按钮暴露出来
     property alias column:column
+    property alias title: title.text
     id:root
     width: 480
     height: 320
@@ -28,6 +29,18 @@ Popup{
         NumberAnimation { property: "scale"; from: 1.0; to: 0.5; duration: 150 }
         NumberAnimation { property: "opacity"; from: 1.0; to: 0.0; duration: 150 }
     }
+    //标题栏
+    Text{
+        id:title
+        horizontalAlignment: Text.AlignHCenter
+        font.pixelSize: 17
+        anchors.top: parent.top
+        topPadding: 3
+        width: parent.width
+        color: "white"
+        // anchors.horizontalCenter: parent.horizontalCenter
+    }
+
     Rectangle{
         id:content
         anchors.fill: parent

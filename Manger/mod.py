@@ -18,6 +18,7 @@ class ModModel(QAbstractListModel):
     FileName=Icon+1
     Enable=FileName+1
     Description=Enable+1
+    Id=Description+1
     def __init__(self, data, parent=None):
         super().__init__(parent)
         self._data = data
@@ -33,6 +34,7 @@ class ModModel(QAbstractListModel):
             ModModel.FileName: QByteArray(b"fileName"),
             ModModel.Enable: QByteArray(b"enable"),
             ModModel.Description: QByteArray(b"description"),
+            ModModel.Id: QByteArray(b"id")
         }
         return mods
 
@@ -51,6 +53,8 @@ class ModModel(QAbstractListModel):
             return d.enable
         if role == ModModel.Description:
             return d.description
+        if role == ModModel.Id:
+            return d.id
         return None
 
     @staticmethod
@@ -87,11 +91,20 @@ class ModModel(QAbstractListModel):
 
     #拖动添加mod
     @reload
-    @Slot(str,str,str,str,int,int,str)#传入参数依次为文件路径，mod名称，mod图标，目标文件夹名(当前所选游戏名)，当前游戏行号，当前角色行号, mod描述
+    @Slot(str,str,str,str,int,int,str, result=bool)#传入参数依次为文件路径，mod名称，mod图标，目标文件夹名(当前所选游戏名)，当前游戏行号，当前角色行号, mod描述
     def addMod(self, file_path, name, icon, target_name, game_id, role_id, description):
         #打印参数
         print("file_path:", file_path , "name:",name, "icon:",icon, "target_name:",target_name, "game_index:",game_id, "role_index:",role_id , "description:",description)
         file_name = os.path.basename(file_path)#mod的文件名
+        #判断文件名是否有后缀,有则去掉
+        if file_name.endswith(".zip") or file_name.endswith(".rar") or file_name.endswith(".7z"):
+            file_name2=os.path.splitext(file_name)[0]
+        else:
+            file_name2=file_name
+        #判断文件名是否已经存在
+        if session.query(Mod).filter(Mod.file_name == file_name2, Mod.game_id == game_id).first():
+            print("文件名已存在")
+            return False
         #处理icon的前缀
         icon=remove_file_prefix(icon)
         #判断icon是否为正常路径,不是则为空字符串
@@ -127,6 +140,7 @@ class ModModel(QAbstractListModel):
         session.add(mod)
         session.commit()
         print("addMod", file_name)
+        return True
 
     #删除mod
     @reload
@@ -205,3 +219,23 @@ class ModModel(QAbstractListModel):
         #如果是enable==0,则打开Mods目录下的game_name目录的file_name文件
         else:
             os.startfile(os.path.join(os.getcwd(), "Mods", game_name, file_name))
+
+    #添加mod图片
+    @reload
+    @Slot(str, int, str)
+    def addModIcon(self, game_name, id, image_path):
+        #前缀处理
+        image_path=remove_file_prefix(image_path)
+        #目标路径
+        target_path=os.path.join(os.getcwd(), "Mods", game_name, "images")
+        #判断图片是否已经存在在目标路径下
+        if os.path.exists(os.path.join(target_path, os.path.basename(image_path))):
+            print("图片已存在")
+            dis=os.path.join(target_path, os.path.basename(image_path))
+        else:
+            dis=shutil.move(image_path, target_path)
+        print("addModIcon:", dis)
+        mod=session.query(Mod).filter(Mod.id == id).first()
+        mod.icon=dis
+        session.commit()
+

@@ -3,9 +3,9 @@
 
 a = Analysis(
     ['main.py'],
-    pathex=["C:/wbr/test/xxmiHelp/Manger"],
+    pathex=['C:/wbr/test/xxmiHelp/Manger'],
     binaries=[],
-    datas=[("qml","./qml")],
+    datas=[],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

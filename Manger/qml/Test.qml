@@ -6,23 +6,34 @@ import Qt5Compat.GraphicalEffects
 import QtQuick.Controls.Basic
 
 
-    Column{
-        clip: true
-        // width: 150
-        // height: 200
-        leftPadding: 5
-        rightPadding: 50
-        Rectangle{
-            width: 200
-            height: 200
-            color: "green"
+Rectangle {
+    width: 200
+    height: 200
+
+    RoundButton {
+        id: roundBtn
+        width: 100
+        height: 50
+        text: "Click me"
+
+        // background 属性定义
+        background: Rectangle {
+            id: btnBackground
+            color: "lightblue"
+            border.color: "blue"
+            radius: 10
         }
-        Rectangle{
-            width: 150
-            height: 100
-            color: "yellow"
+
+        // 在按钮点击时访问和修改背景属性
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                console.log(btnBackground.color); // 输出背景的 color 属性
+                btnBackground.color = "green"; // 修改背景的 color 属性
+            }
         }
     }
+}
 
 
 

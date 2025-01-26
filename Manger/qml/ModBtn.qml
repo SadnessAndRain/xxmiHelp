@@ -17,7 +17,6 @@ RoundButton{
                 easing.type: Easing.InOutQuad // 动画缓动类型
             }
         }
-
     }
 }
 

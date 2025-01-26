@@ -108,13 +108,13 @@ class RoleModel (QAbstractListModel):
 
     #修改角色
     @reload
-    @Slot(int,str,str)
-    def modifyRole(self,id,name,icon):
+    @Slot(int,str,str, int)
+    def modifyRole(self,id ,name ,icon, game_id):
         role = session.query(Role).filter(Role.id==id).first()
         role.name = name
         role.icon = remove_file_prefix(icon)
         session.commit()
-        self.initData(id)
+        self.initData(game_id)
 
     #清理data
     @reload
