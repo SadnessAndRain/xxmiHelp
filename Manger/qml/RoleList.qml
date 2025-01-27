@@ -33,6 +33,7 @@ ListView{
     //高亮
     highlight:Rectangle{
         color: "#d3def6"
+        width: 10
         radius: 9
     }
     highlightMoveDuration:150

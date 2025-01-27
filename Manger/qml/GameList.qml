@@ -61,7 +61,6 @@ Rectangle{
             id:hlRect
             color: "#F8FAFD"
             width: 10
-            height: 10
             radius: 9
         }
         highlightMoveDuration:150
