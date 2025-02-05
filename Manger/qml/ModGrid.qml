@@ -35,7 +35,6 @@ GridView{
                 }
             }
         }
-
         Connections{
             target: addModDialog.confirmation
             function onClicked(){

@@ -95,8 +95,8 @@ class ModModel(QAbstractListModel):
     def addMod(self, file_path, name, icon, target_name, game_id, role_id, description):
         #打印参数
         print("file_path:", file_path , "name:",name, "icon:",icon, "target_name:",target_name, "game_index:",game_id, "role_index:",role_id , "description:",description)
-        file_name = os.path.basename(file_path)#mod的文件名
-        #判断文件名是否有后缀,有则去掉
+        file_name = os.path.basename(file_path)#mod的文件名带后缀
+        #判断文件名是否有表明为压缩包的后缀,有则去掉
         if file_name.endswith(".zip") or file_name.endswith(".rar") or file_name.endswith(".7z"):
             file_name2=os.path.splitext(file_name)[0]
         else:
@@ -133,10 +133,10 @@ class ModModel(QAbstractListModel):
                 rf.extractall(path=target_path)
             #删除压缩包
             os.remove(os.path.join(target_path, file_name))
-        #去掉file_name的后缀
-        file_name=os.path.splitext(file_name)[0]
+        # #去掉file_name的后缀
+        # file_name=os.path.splitext(file_name)[0]
         #将mod信息写入数据库
-        mod=Mod(name=name, icon=icon, file_name=file_name, game_id=game_id, role_id=role_id, description=description)
+        mod=Mod(name=name, icon=icon, file_name=file_name2, game_id=game_id, role_id=role_id, description=description)
         session.add(mod)
         session.commit()
         print("addMod", file_name)
@@ -215,10 +215,18 @@ class ModModel(QAbstractListModel):
     def openModFolder(self, game_name, file_name, target_path, enable):
         #如果是enable==1,则打开target_path目录下的game_name文件夹
         if enable:
-            os.startfile(os.path.join(target_path, file_name))
+            #如果file_name不是文件夹,则打开该文件所在目录
+            if not os.path.isdir(os.path.join(target_path, file_name)):
+                os.startfile(target_path, file_name)
+            else:
+                os.startfile(os.path.join(target_path, file_name))
         #如果是enable==0,则打开Mods目录下的game_name目录的file_name文件
         else:
-            os.startfile(os.path.join(os.getcwd(), "Mods", game_name, file_name))
+            #如果file_name不是文件夹,则打开该文件所在目录
+            if not os.path.isdir(os.path.join(os.getcwd(), "Mods", game_name, file_name)):
+                os.startfile(os.path.join(os.getcwd(), "Mods", game_name))
+            else:
+                os.startfile(os.path.join(os.getcwd(), "Mods", game_name, file_name))
 
     #添加mod图片
     @reload
